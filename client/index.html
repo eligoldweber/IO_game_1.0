@@ -1,3 +1,4 @@
+<head><link rel="shortcut icon" href="favicon.ico" type="image/x-icon"></head>
 <div id="signDiv">
 	Username: <input id="signDiv-username" type="text"></input><br>
 	Password: <input id="signDiv-password" type="password"></input>
@@ -55,19 +56,87 @@ socket.on('signInResponse',function(data){
 var chatText = document.getElementById("chat-text");
 var chatInput = document.getElementById("chat-input");
 var chatForm = document.getElementById("chat-form");
+//game
 
 var ctx = document.getElementById("ctx").getContext("2d");
 ctx.font = '30px Arial';
 
+var Player = function(initPack){
+	var self = {};
+	self.number = initPack.number;
+	self.id = initPack.id;
+	self.x = initPack.x;
+	self.y = initPack.y;
+	self.name = initPack.name;
+	Player.list[self.id] = self;
+	return self;
+}
+Player.list = {};
 
+var Bullet = function(initPack){
+	var self = {};
+	self.id = initPack.id;
+	self.x = initPack.x;
+	self.y = initPack.y;
+	Bullet.list[self.id] = self;
+	return self;
+}
+Bullet.list = {};
 
-socket.on('newPositions',function(data){
-	ctx.clearRect(0,0,500,500);
-	for(var i =0; i <data.player.length; i++)
-		ctx.fillText(data.player[i].name,data.player[i].x,data.player[i].y);
-	for(var i =0; i <data.bullet.length; i++)
-		ctx.fillRect(data.bullet[i].x,data.bullet[i].y,20,10);
+socket.on('init',function(data){
+	//[player : [{id:123,bumber:1,x:0,y:0, [...], bullet []}]]
+	for(var i =0;i<data.player.length;i++){
+		new Player(data.player[i]);
+	}
+	for(var i =0;i<data.bullet.length;i++){
+		new Bullet(data.bullet[i]);
+	}
+	
 });
+
+socket.on('update',function(data){
+	for(var i =0;i<data.player.length;i++){
+		var pack = data.player[i];
+		var p = Player.list[pack.id];
+		if(p){
+			if(pack.x !== undefined)
+				p.x = pack.x;
+			if(pack.y !== undefined)
+				p.y = pack.y;
+		}
+	}
+	for(var i =0;i<data.bullet.length;i++){
+		var pack = data.bullet[i];
+		var b = Bullet.list[data.bullet[i].id];
+		if(b){
+			if(pack.x !== undefined)
+				b.x = pack.x;
+			if(pack.y !== undefined)
+				b.y = pack.y;
+		}
+	}
+	
+});
+
+
+socket.on('remove',function(data){
+	for(var i=0;i<data.player.length;i++){
+		delete Player.list[data.player[i]];
+	}
+	for(var i=0;i<data.bullet.length;i++){
+		delete Bullet.list[data.bullet[i]];
+	}
+});
+
+setInterval(function(){
+	ctx.clearRect(0,0,500,500);
+	for(var i in Player.list)
+		ctx.fillText(Player.list[i].name,Player.list[i].x,Player.list[i].y);
+	for(var i in Bullet.list)
+		ctx.fillRect(Bullet.list[i].x,Bullet.list[i].y,10,10);
+},40);
+
+
 socket.on('addToChat',function(data){
 	chatText.innerHTML += '<div>' + '<b>'+ data.name + '</b>' + ": " +data.value +'</div>';	
 });

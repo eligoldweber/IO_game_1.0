@@ -84,7 +84,27 @@ var Player = function(id,name){
 			self.spdY = 0;
 		
 	}
+	
+	self.getInitPack = function(){
+		return {
+			id:self.id,
+			x:self.x,
+			y:self.y,
+			number:self.number,
+			name:self.name,	
+		};
+	}
+	self.getUpdatePack = function(){
+		return {
+			id:self.id,
+			x:self.x,
+			y:self.y,
+			name:self.name,	
+		};
+	}
+	
 	Player.list[id] = self;
+	initPack.player.push(self.getInitPack());
 	return self;
 }
 Player.list = {};
@@ -105,9 +125,22 @@ Player.onConnect = function(socket,name){
 			player.mouseAngle = data.state;
 	});
 	
+	socket.emit('init',{
+		player:Player.getAllInitPack(),
+		bullet:Bullet.getAllInitPack(),
+	})
+}
+
+Player.getAllInitPack = function(){
+	var players = [];
+	for(var i in Player.list)
+		players.push(Player.list[i].getInitPack());
+	return players;
 }
 Player.onDissconnect = function(socket){
 	delete Player.list[socket.id];
+	removePack.player.push(socket.id);
+	
 }
 
 Player.update = function(){
@@ -115,12 +148,7 @@ Player.update = function(){
 	for(var i in Player.list){
 		var	player = Player.list[i];
 		player.update();
-		pack.push({
-			x:player.x,
-			y:player.y,
-			number:player.number,
-			name:player.name
-		});
+		pack.push(player.getUpdatePack());
 		
 	}
 	return pack;
@@ -153,10 +181,29 @@ var Bullet = function(parent, angle){
 			}
 		}
 	} 
+	self.getInitPack = function(){
+		return {
+			id:self.id,
+			x:self.x,
+			y:self.y,
+		
+		};
+	}
+	self.getUpdatePack = function(){
+		return {
+			id:self.id,
+			x:self.x,
+			y:self.y,
+		};
+	}
 	
 	Bullet.list[self.id] = self;
+	initPack.bullet.push(self.getInitPack());
 	return self;
 }
+
+
+
 Bullet.list = {};
 
 Bullet.update = function(){
@@ -164,19 +211,23 @@ Bullet.update = function(){
 	for(var i in Bullet.list){
 		var	bullet = Bullet.list[i];
 		bullet.update();
-		if(bullet.toRemove)
+		if(bullet.toRemove){
 			delete Bullet.list[i];
-		else
-			pack.push({
-				x:bullet.x,
-				y:bullet.y
-			 });
+			removePack.bullet.push(bullet.id);
+		}else
+			pack.push(bullet.getUpdatePack());
 		
 	}
 	return pack;
 }
+Bullet.getAllInitPack = function(){
+	var bullets = [];
+	for(var i in Bullet.list)
+		bullets.push(Bullet.list[i].getInitPack());
+	return bullets;
+}
 ////////////// BULLET ^^
-var DEBUG = true;
+var DEBUG = false;
 var PASS = "eliisawesome";
 // var USERS = {
 // 	"bob":"asd",
@@ -253,6 +304,10 @@ io.sockets.on('connection',function(socket){
 	console.log('socket connection')
 });
 
+var initPack ={player:[],bullet:[]};
+var removePack ={player:[],bullet:[]};
+
+
 setInterval(function(){
 	var pack = {
 		player:Player.update(),
@@ -261,7 +316,13 @@ setInterval(function(){
 
 	for( var i in SOCKET_LIST){
 		var socket = SOCKET_LIST[i];
-		socket.emit('newPositions',pack);
+		socket.emit('init',initPack);
+		socket.emit('update',pack);
+		socket.emit('remove',removePack);
 	}
 	
+	initPack.player = [];
+	initPack.bullet = [];
+	removePack.player = [];
+	removePack.bullet = [];
 },1000/25);
