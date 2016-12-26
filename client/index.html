@@ -66,7 +66,7 @@ socket.on('newPositions',function(data){
 	for(var i =0; i <data.player.length; i++)
 		ctx.fillText(data.player[i].name,data.player[i].x,data.player[i].y);
 	for(var i =0; i <data.bullet.length; i++)
-		ctx.fillRect(data.bullet[i].x-5,data.bullet[i].y-5,10,10);
+		ctx.fillRect(data.bullet[i].x,data.bullet[i].y,10,10);
 });
 socket.on('addToChat',function(data){
 	chatText.innerHTML += '<div>' + '<b>'+ data.name + '</b>' + ": " +data.value +'</div>';	
