@@ -2,7 +2,7 @@
 	Username: <input id="signDiv-username" type="text"></input><br>
 	Password: <input id="signDiv-password" type="password"></input>
 	<button id="signDiv-signIn">Sign In</button>
-	<button id="signDiv-signUp">Sign Up</button>
+	<!--<button id="signDiv-signUp">Sign Up</button> -->
 </div>
 
 <div id="gameDiv" style="display:none;">
@@ -27,15 +27,15 @@ var socket = io();
 var signDiv = document.getElementById("signDiv");
 var signDivUsername = document.getElementById("signDiv-username");
 var signDivSignIn = document.getElementById("signDiv-signIn");
-var signDivSignUp = document.getElementById("signDiv-signUp");
+//var signDivSignUp = document.getElementById("signDiv-signUp");
 var signDivPassword = document.getElementById("signDiv-password");
 
 signDivSignIn.onclick = function (){
 	socket.emit('signIn',{username:signDivUsername.value,password:signDivPassword.value});
 }
-signDivSignUp.onclick = function (){
-	socket.emit('signUp',{username:signDivUsername.value,password:signDivPassword.value});
-}
+// signDivSignUp.onclick = function (){
+// 	socket.emit('signUp',{username:signDivUsername.value,password:signDivPassword.value});
+// }
 
 socket.on('signInResponse',function(data){
 	if(data.success){
@@ -44,12 +44,12 @@ socket.on('signInResponse',function(data){
 	}else
 		alert("sign in unsuccessfull");
 });
-socket.on('signUpResponse',function(data){
-	if(data.success)
-		alert("sign up successfull");
-	else
-		alert("sign up unsuccessfull");
-});
+// socket.on('signUpResponse',function(data){
+// 	if(data.success)
+// 		alert("sign up successfull");
+// 	else
+// 		alert("sign up unsuccessfull");
+// });
 
 //game
 var chatText = document.getElementById("chat-text");
@@ -64,12 +64,12 @@ ctx.font = '30px Arial';
 socket.on('newPositions',function(data){
 	ctx.clearRect(0,0,500,500);
 	for(var i =0; i <data.player.length; i++)
-		ctx.fillText(data.player[i].number,data.player[i].x,data.player[i].y);
+		ctx.fillText(data.player[i].name,data.player[i].x,data.player[i].y);
 	for(var i =0; i <data.bullet.length; i++)
 		ctx.fillRect(data.bullet[i].x-5,data.bullet[i].y-5,10,10);
 });
 socket.on('addToChat',function(data){
-	chatText.innerHTML += '<div>' + data + '</div>';	
+	chatText.innerHTML += '<div>' + '<b>'+ data.name + '</b>' + ": " +data.value +'</div>';	
 });
 socket.on('evalAnswer',function(data){
 	console.log(data);

@@ -1,4 +1,4 @@
-var mongojs = require("mongojs");
+//var mongojs = require("mongojs");
 //var db = mongo
 var express = require('express');
 var app = express();
@@ -36,7 +36,7 @@ var Entity = function(id){
 	return self;
 }
 
-var Player = function(id){
+var Player = function(id,name){
 	var self = Entity();
 	self.number = "" + Math.floor(10*Math.random());
 	self.id = id;
@@ -47,6 +47,7 @@ var Player = function(id){
 	self.pressingAttack = false;
 	self.mouseAngle = 0;
 	self.maxSpd = 10;
+	self.name = name;
 	
 	var super_update = self.update;
 	self.update = function(){
@@ -85,8 +86,8 @@ var Player = function(id){
 	return self;
 }
 Player.list = {};
-Player.onConnect = function(socket){
-	var player = Player(socket.id);
+Player.onConnect = function(socket,name){
+	var player = Player(socket.id,name);
 	socket.on('keyPress',function(data){
 		if(data.inputId === 'left')
 			player.pressingLeft = data.state;
@@ -115,12 +116,16 @@ Player.update = function(){
 		pack.push({
 			x:player.x,
 			y:player.y,
-			number:player.number
+			number:player.number,
+			name:player.name
 		});
 		
 	}
 	return pack;
 }
+//////////PLAYER ^^////
+//-------////
+
 //////////////// BULLET
 var Bullet = function(parent, angle){
 	var self = Entity();
@@ -170,13 +175,14 @@ Bullet.update = function(){
 }
 ////////////// BULLET ^^
 var DEBUG = true;
-var USERS = {
-	"bob":"asd",
-
-}
+var PASS = "eliisawesome";
+// var USERS = {
+// 	"bob":"asd",
+//
+// }
 var isValidPassword = function(data,cb){
 	setTimeout(function(){
-		cb(USERS[data.username] === data.password);
+		cb(PASS === data.password);
 	},10);
 	
 }
@@ -201,24 +207,25 @@ io.sockets.on('connection',function(socket){
 	socket.on('signIn',function(data){
 		isValidPassword(data,function(res){
 			if(res){
-				Player.onConnect(socket);
+				//console.log("name = " + data.username);
+				Player.onConnect(socket,data.username);
 				socket.emit('signInResponse',{success:true});
 			}else{
 				socket.emit('signInResponse',{success:false});
 			}
 		});
 	});
-	socket.on('signUp',function(data){
-		isUsernameTaken(data,function(res){
-			if(res){
-				socket.emit('signUpResponse',{success:false});
-			}else{
-				addUser(data,function(){
-					socket.emit('signUpResponse',{success:true});
-				});
-			}
-		});
-	});
+	// socket.on('signUp',function(data){
+// 		isUsernameTaken(data,function(res){
+// 			if(res){
+// 				socket.emit('signUpResponse',{success:false});
+// 			}else{
+// 				addUser(data,function(){
+// 					socket.emit('signUpResponse',{success:true});
+// 				});
+// 			}
+// 		});
+// 	});
 	
 	socket.on('disconnect',function(){
 		delete SOCKET_LIST[socket.id];
@@ -226,9 +233,9 @@ io.sockets.on('connection',function(socket){
 		
 	});
 	socket.on('sendMsgToServer',function(data){
-		var playerName = ("" + socket.id).slice(2,7);
+		var playerName = Player.list[socket.id].name; //("" + socket.id).slice(2,7);
 		for(var i in SOCKET_LIST){
-			SOCKET_LIST[i].emit('addToChat',playerName + ': '+ data);
+			SOCKET_LIST[i].emit('addToChat',{name:playerName,value:data});//playerName + ': '+ data);
 		}
 		
 	});
