@@ -49,6 +49,9 @@ var Player = function(id,name){
 	self.mouseAngle = 0;
 	self.maxSpd = 10;
 	self.name = name;
+	self.hp = 10;
+	self.hpMax = 10;
+	self.score = 0;
 	
 	var super_update = self.update;
 	self.update = function(){
@@ -92,6 +95,9 @@ var Player = function(id,name){
 			y:self.y,
 			number:self.number,
 			name:self.name,	
+			hp:self.hp,
+			hpMax:self.hpMax,
+			score:self.score,
 		};
 	}
 	self.getUpdatePack = function(){
@@ -99,7 +105,9 @@ var Player = function(id,name){
 			id:self.id,
 			x:self.x,
 			y:self.y,
-			name:self.name,	
+			name:self.name,
+			hp:self.hp,
+			score:self.score,
 		};
 	}
 	
@@ -126,6 +134,7 @@ Player.onConnect = function(socket,name){
 	});
 	
 	socket.emit('init',{
+		selfId:socket.id,
 		player:Player.getAllInitPack(),
 		bullet:Bullet.getAllInitPack(),
 	})
@@ -177,6 +186,15 @@ var Bullet = function(parent, angle){
 			//console.log(self.getDistance(p) + " ____" + self.parent + " === " + p.id);
 			if(self.getDistance(p) < 20 && self.parent != p.id){
 				//handle collision ex hp --
+				p.hp --;
+				if(p.hp <= 0){
+					var shooter = Player.list[self.parent];
+					if(shooter)
+						shooter.score ++;
+					p.hp  = p.hpMax;
+					p.x = Math.random() *500;
+					p.y = Math.random() *500;
+				}
 				self.toRemove = true;
 			}
 		}
@@ -260,7 +278,6 @@ io.sockets.on('connection',function(socket){
 	socket.on('signIn',function(data){
 		isValidPassword(data,function(res){
 			if(res){
-				//console.log("name = " + data.username);
 				Player.onConnect(socket,data.username);
 				socket.emit('signInResponse',{success:true});
 			}else{
@@ -268,17 +285,6 @@ io.sockets.on('connection',function(socket){
 			}
 		});
 	});
-	// socket.on('signUp',function(data){
-// 		isUsernameTaken(data,function(res){
-// 			if(res){
-// 				socket.emit('signUpResponse',{success:false});
-// 			}else{
-// 				addUser(data,function(){
-// 					socket.emit('signUpResponse',{success:true});
-// 				});
-// 			}
-// 		});
-// 	});
 	
 	socket.on('disconnect',function(){
 		delete SOCKET_LIST[socket.id];
