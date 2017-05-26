@@ -1,9 +1,76 @@
 <head><link rel="shortcut icon" href="favicon.ico" type="image/x-icon"></head>
+<style> 
+input[type=text] {
+    width: 100%;
+    padding: 0px 0px;
+    margin: 8px 0;
+    box-sizing: border-box;
+    border: none;
+    background-color: #ffffff;
+    color: #000000;
+	width: 300px;
+	height: 30px;
+}
+input[type=password] {
+    width: 100%;
+    padding: 0px 0px;
+    margin: 8px 0;
+    box-sizing: border-box;
+    border: none;
+    background-color: #ffffff;
+    color: #000000;
+	width: 300px;
+	height: 30px;
+}
+::-webkit-input-placeholder { /* WebKit, Blink, Edge */
+    color:    #bdc1c7;
+    background-color: #fbffbf;
+	
+}
+:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+   color:    #bdc1c7;
+   background-color: #fbffbf;
+   opacity:  1;
+}
+::-moz-placeholder { /* Mozilla Firefox 19+ */
+   color:    #bdc1c7;
+   background-color: #fbffbf;
+   opacity:  1;
+}
+:-ms-input-placeholder { /* Internet Explorer 10-11 */
+   color:    #bdc1c7;
+   background-color: #fbffbf;
+}
+button {
+    background-color: #4267b2; /* Green */
+    border: none;
+    color: white;
+	margin: 7px 0;
+    padding: 0px 100px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+	width: 300px;
+	height: 45px;
+}
+
+</style>
 <div id="signDiv">
-	Username: <input id="signDiv-username" type="text"></input><br>
+	<!-- Username: <input id="signDiv-username" type="text"></input><br>
 	Password: <input id="signDiv-password" type="password"></input>
-	<button id="signDiv-signIn">Sign In</button>
+	<button id="signDiv-signIn">Sign In</button> -->
 	<!--<button id="signDiv-signUp">Sign Up</button> -->
+	<form style="position: relative;">
+	    <img src="/client/img/FB2.png" border="0" />
+	    <div style="position: absolute; left: 466px; top: 245px;"> 
+	        <input type="text" placeholder="Email or Phone Number" style="font-size:20px"/><br />
+	       <input type="password" placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;"style="font-size:20px"/><br />
+	       
+	       <button type="submit">Sign in</button>
+	    </div>
+	</div>
+	
 </div>
 
 <div id="gameDiv" style="display:none;">
@@ -22,6 +89,8 @@
 
 
 <script> 
+//    background-color: #4267b2;
+
 var WIDTH = 500;
 var HEIGHT = 500;
 var socket = io(); 
@@ -67,7 +136,13 @@ Img.bullet.src = '/client/img/bullet.png';
 Img.map = new Image();
 Img.map.src = '/client/img/map.png';
 
-
+var rotateAndPaint = function( context, image, angleInRad , positionX, positionY, axisX, axisY ) {
+  context.translate( positionX, positionY );
+  context.rotate( angleInRad );
+  context.drawImage( image, -axisX, -axisY );
+  context.rotate( -angleInRad );
+  context.translate( -positionX, -positionY );
+}
 
 var ctx = document.getElementById("ctx").getContext("2d");
 ctx.font = '30px Arial';
@@ -94,9 +169,11 @@ var Player = function(initPack){
 		var width = Img.player.width*1.5;
 		var height = Img.player.height*1.5;
 		
+		// rotateAndPaint(ctx,Img.player, 0.785398,Img.player.width,Img.player.height,
+		// 	self.x-width/2,self.y-height/2,width,height)
 		ctx.drawImage(Img.player,0,0,Img.player.width,Img.player.height,
 			self.x-width/2,self.y-height/2,width,height);
-		
+
 		//ctx.fillText(self.score,self.x,self.y-60);
 		
 	}
